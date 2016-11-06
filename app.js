@@ -44,7 +44,8 @@ app.controller('MainCtrl', [
     '$stateParams',
     'posts',
     function($scope, $stateParams, posts){
-
+      // Grabs the appropriate post from the posts factory using the id from $stateParams.
+      $scope.post = posts.posts[$stateParams.id];
     }]);
 
     // Configures home state using $stateProvider
