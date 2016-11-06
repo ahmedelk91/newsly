@@ -24,7 +24,7 @@
       <ui-view></ui-view>
     </div>
   </div>
-  <!-- In-line template for the "home" state. -->
+  <!-- In-line templates for states. -->
   <script type="text/ng-template" id="/home.html">
     <div class='page-header'>
       <h1>Newsly</h1>
@@ -42,6 +42,9 @@
         <!-- If a user does not submit a link, only the title will be shown. -->
         <span ng-hide="post.link">
           {{post.title}}
+        </span>
+        <span>
+          <a href="#/posts/{{$index}}">Comments</a>
         </span>
       </span>
     </div>
@@ -61,6 +64,7 @@
     </form>
   </script>
 
+  <!-- Posts template -->
   <script type="text/ng-template" id="/posts.html">
     <div class="page-header">
       <h3>
@@ -80,6 +84,15 @@
         {{comment.body}}
       </span>
     </div>
+
+    <form ng-submit="addComment()" style="margin-top:30px;">
+      <h3>Add a new comment</h3>
+
+      <div class="form group">
+        <input type="text" class="form-control" placeholder="Comment" ng-model="body">
+      </div>
+      <button type="submit" class="btn btn-primary">Post</button>
+    </form>
   </script>
 </body>
 </html>

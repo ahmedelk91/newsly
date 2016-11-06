@@ -46,6 +46,15 @@ app.controller('MainCtrl', [
     function($scope, $stateParams, posts){
       // Grabs the appropriate post from the posts factory using the id from $stateParams.
       $scope.post = posts.posts[$stateParams.id];
+      $scope.addComment = function(){
+        if($scope.body === '') {return; }
+        $scope.post.comments.push({
+          body: $scope.body,
+          author: 'user',
+          upvotes: 0
+        });
+        $scope.body = '';
+      };
     }]);
 
     // Configures home state using $stateProvider
