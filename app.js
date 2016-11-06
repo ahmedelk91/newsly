@@ -1,20 +1,22 @@
 // Defines the app as an angular module.
 var app = angular.module('Newsly', []);
 
+//factory for posts
+app.factory('posts', [function(){
+  var o = {
+    posts: []
+  };
+  return o;
+}])
 // Main conterller referenced in the <body> tag.
 app.controller('MainCtrl', [
   '$scope',
-  function($scope){
-    $scope.test = "Hello World!";
-
-    $scope.posts = [
-      {title: 'post 1', upvotes: 5},
-      {title: 'post 2', upvotes: 2},
-      {title: 'post 3', upvotes: 15},
-      {title: 'post 4', upvotes: 9},
-      {title: 'post 5', upvotes: 4}
-    ];
-// addPost function
+  // injects 'posts' service in the Main controller
+  '$posts',
+  function($scope, posts){
+    // Binds the posts array in the factory to the $scope.posts variable
+    $scope.posts = posts.posts;
+    // addPost function
     $scope.addPost = function(){
       // Stops a user from submitting a blank title
       if(!$scope.title || $scope.title === '') { return; }
@@ -27,7 +29,7 @@ app.controller('MainCtrl', [
       $scope.title = '';
       $scope.link = '';
     };
-// incrementUpvotes function
+    // incrementUpvotes function
     $scope.incrementUpvotes = function(post){
       post.upvotes += 1;
     };
