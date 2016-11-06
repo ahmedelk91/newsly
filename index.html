@@ -15,15 +15,17 @@
 </head>
 
 <!-- Main controller. Containes addPost and incrementUpvotes functions -->
-<body ng-app="Newsly" ng-controller="MainCtrl">
-  <!-- Shows all posts ordered by upvotes. -->
+<body ng-app="Newsly">
+
   <div class="row">
     <div class="col-md-6 col-md-offset-3">
-
+      <!-- Whenever ui-router detects a route change, it places the new states template here and intializes that state's controller -->
+      <ui-view></ui-view>
       <div class="page-header">
         <h1>Newsly</h1>
       </div>
 
+      <!-- Shows all posts ordered by upvotes. -->
       <div ng-repeat="post in posts | orderBy: '-upvotes'">
         <!-- When a user clicks thumbs-up the post's upvote will increment by 1 -->
         <span class="glyphicon glyphicon-thumbs-up" ng-click="incrementUpvotes(post)"></span>
@@ -55,5 +57,11 @@
 
     </div>
   </div>
+  <!-- In-line template for the "home" state. -->
+  <script type="text/ng-template" id="/home.html">
+    <div class='page-header'>
+      <h1>Newsly</h1>
+    </div>
+  </script>
 </body>
 </html>
