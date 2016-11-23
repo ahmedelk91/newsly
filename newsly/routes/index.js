@@ -31,7 +31,7 @@ router.post('/posts', function(req, res, next){
 // route for automatically preloading post objects ****uses Expressjs' param() function****
 router.param('post', function (req, res, next, id) {
   var query = Post.findById(id);
-
+// Use's mongoose's query interface which provides a more flexible way of interacting with the database.
   query.exec(function (err, post){
     if (err) { return next(err); }
     if (!post) { return next(new Error('can\'t find post')); }
@@ -40,5 +40,12 @@ router.param('post', function (req, res, next, id) {
     return next();
   });
 });
+
+// Route for returning a single post
+router.get('/posts/:post', function(req, res) {
+  res.json(req.post);
+});
+
+
 
 module.exports = router;
