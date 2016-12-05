@@ -74,4 +74,25 @@ router.post('/posts/:post/comments', function(req, res, next) {
   });
 });
 
+//route to upvote comments
+router.put('posts/:post/comments/:comment/upvote', function(req, res, next){
+  req.comment.upvote(function(err, comment){
+    if (err) {return next(err); }
+
+    res.json(post);
+  });
+});
+
+router.param('comment', function(req, res, next, id) {
+  var query = Post.findById(id);
+  // Use's mongoose's query interface which provides a more flexible way of interacting with the database.
+  query.exec(function (err, comment) {
+    if (err) { return next(err); }
+    if (!comment) { return next(new Error('can\'t find comment')); }
+
+    req.comment = comment;
+    return next();
+  });
+});
+
 module.exports = router;
