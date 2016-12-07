@@ -2,7 +2,7 @@
 var app = angular.module('newsly', ['ui.router']);
 
 //factory for posts
-app.factory('posts', [function(){
+app.factory('posts', ['$http', function($http){
   var o = {
     posts: []
   };
@@ -76,7 +76,13 @@ app.controller('MainCtrl', [
         .state('home', {
           url:'/home',
           templateUrl: '/home.html',
-          controller: 'MainCtrl'
+          controller: 'MainCtrl',
+          // property of ui-router that ensures posts are loaded
+          resolve: {
+            postPromise: ['posts', function(posts){
+              return posts.getAll();
+            }]
+          }
         })
         // Posts state: individual posts and their comments
         .state('posts', {
