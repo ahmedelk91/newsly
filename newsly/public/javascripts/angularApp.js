@@ -7,6 +7,12 @@ app.factory('posts', [function(){
     posts: []
   };
   return o;
+  // Retrieves post from backend
+  o.getAll = function() {
+    return $http.get('/posts').success(function(data){
+      angular.copy(data, o.posts);
+    });
+  };
 }]);
 // Main conterller referenced in the <body> tag.
 app.controller('MainCtrl', [

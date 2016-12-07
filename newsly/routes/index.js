@@ -45,7 +45,7 @@ router.param('post', function(req, res, next, id) {
 
 // Route for returning a single post
 router.get('/posts/:post', function(req, res, next) {
-  // populate function retrieves comments along with posts
+  // populate function automatically loads all comments associated with a post
   req.post.populate('comments', function(err, post){
     if (err) { return next(err); }
 
