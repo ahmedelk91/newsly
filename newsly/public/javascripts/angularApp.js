@@ -11,6 +11,12 @@ app.factory('posts', ['$http', function($http){
     return $http.get('/posts').success(function(data){
       angular.copy(data, o.posts);
     });
+    // method for creating new posts
+    o.create = function(post){
+      return $http.post('/posts', post).success(function(data){
+        o.posts.push(data);
+      });
+    };
   };
   return o;
 }]);
