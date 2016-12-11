@@ -9,17 +9,20 @@ app.factory('posts', ['$http', function($http){
   // Retrieves post from backend
   o.getAll = function() {
     return $http.get('/posts').success(function(data){
+      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
       angular.copy(data, o.posts);
     });
-    // method for creating new posts
-    o.create = function(post){
-      return $http.post('/posts', post).success(function(data){
-        o.posts.push(data);
-      });
-    };
+  };
+  // method for creating new posts
+  o.create = function(post){
+    // binds function that will be executed when the request returns 
+    return $http.post('/posts', post).success(function(data){
+      o.posts.push(data);
+    });
   };
   return o;
 }]);
+
 // Main conterller referenced in the <body> tag.
 app.controller('MainCtrl', [
   '$scope',
@@ -32,6 +35,13 @@ app.controller('MainCtrl', [
     $scope.addPost = function(){
       // Stops a user from submitting a blank title
       if(!$scope.title || $scope.title === '') { return; }
+      // saves posts to the server, persistent data
+      posts.create({
+        title: $scope.title,
+        link: $scope.link,
+      });
+      $scope.title = '';
+      $scope.link = '';
       // Pushes the new post to the $scope.post array
       $scope.posts.push({
         title: $scope.title,
