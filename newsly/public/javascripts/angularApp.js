@@ -13,23 +13,21 @@ app.factory('posts', ['$http', function($http){
       // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
       angular.copy(data, o.posts);
     });
-    // method for creating new posts
-    o.create = function(post) {
-      // binds function that will be executed when the request returns
-      return $http.post('/posts', post).success(function(data){
-        o.posts.push(data);
-      });
-    };
-    // o.upvote = function(post) {
-    //   return $http.put('/posts' + post._id + '/upvote')
-    //   .success(function(data){
-    //     post.upvotes += 1;
-    //   });
-    // };
+  };
+  // method for creating new posts
+  o.create = function(post) {
+    // binds function that will be executed when the request returns
+    return $http.post('/posts', post).success(function(data){
+      o.posts.push(data);
+    });
+  };
+  o.upvote = function(post) {
+    return $http.put('/posts/' + post._id + '/upvote').success(function(data){
+      post.upvotes += 1;
+    });
   };
   return o;
 }]);
-
 // Main conterller referenced in the <body> tag.
 app.controller('MainCtrl', [
   '$scope',
@@ -49,23 +47,23 @@ app.controller('MainCtrl', [
       });
       $scope.title = '';
       $scope.link = '';
-      // Pushes the new post to the $scope.post array
-      $scope.posts.push({
-        title: $scope.title,
-        link: $scope.link,
-        upvotes: 0,
-        comments: [
-          {author: 'Joe', body: 'Awesome post!', upvotes: 0},
-          {author: 'Bob', body: 'Great idea but everything is wrong!', upvotes: 0}
-        ]
-      });
-      $scope.title = '';
-      $scope.link = '';
-      // incrementUpvotes function
-      $scope.incrementUpvotes = function(post){
-        post.upvotes += 1;
-      };
-    };
+    }
+    // Pushes the new post to the $scope.post array
+    $scope.posts.push({
+      title: $scope.title,
+      link: $scope.link,
+      upvotes: 0,
+      comments: [
+        {author: 'Joe', body: 'Awesome post!', upvotes: 0},
+        {author: 'Bob', body: 'Great idea but everything is wrong!', upvotes: 0}
+      ]
+    });
+    $scope.title = '';
+    $scope.link = '';
+    // incrementUpvotes function
+    $scope.incrementUpvotes = function(post){
+      posts.upvote(post);
+    }
   }]);
 
   app.controller('PostsCtrl', [
