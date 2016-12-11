@@ -8,17 +8,24 @@ app.factory('posts', ['$http', function($http){
   };
   // Retrieves post from backend
   o.getAll = function() {
+    // queries the '/posts' route
     return $http.get('/posts').success(function(data){
       // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
       angular.copy(data, o.posts);
     });
-  };
-  // method for creating new posts
-  o.create = function(post){
-    // binds function that will be executed when the request returns 
-    return $http.post('/posts', post).success(function(data){
-      o.posts.push(data);
-    });
+    // method for creating new posts
+    o.create = function(post) {
+      // binds function that will be executed when the request returns
+      return $http.post('/posts', post).success(function(data){
+        o.posts.push(data);
+      });
+    };
+    o.upvote = function(post) {
+      return $http.put('/posts' + post._id + '/upvote')
+      .success(function(data){
+        post.upvotes += 1;
+      });
+    };
   };
   return o;
 }]);
@@ -57,7 +64,7 @@ app.controller('MainCtrl', [
     };
     // incrementUpvotes function
     $scope.incrementUpvotes = function(post){
-      post.upvotes += 1;
+      posts.upvote(post);
     };
   }]);
 
