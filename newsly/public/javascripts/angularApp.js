@@ -10,8 +10,9 @@ app.factory('posts', ['$http', function($http){
   o.getAll = function() {
     // queries the '/posts' route
     return $http.get('/posts').success(function(data){
-      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
+      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated
       angular.copy(data, o.posts);
+
     });
   };
   // method for creating new posts
@@ -47,19 +48,16 @@ app.controller('MainCtrl', [
       });
       $scope.title = '';
       $scope.link = '';
-    }
-    // Pushes the new post to the $scope.post array
-    $scope.posts.push({
-      title: $scope.title,
-      link: $scope.link,
-      upvotes: 0,
-      comments: [
-        {author: 'Joe', body: 'Awesome post!', upvotes: 0},
-        {author: 'Bob', body: 'Great idea but everything is wrong!', upvotes: 0}
-      ]
-    });
-    $scope.title = '';
-    $scope.link = '';
+      // Pushes the new post to the $scope.post array
+      $scope.posts.push({
+        title: $scope.title,
+        link: $scope.link,
+        upvotes: 0,
+        comments: []
+      });
+      $scope.title = '';
+      $scope.link = '';
+    } //bracket placed here instead of before $scope.posts.push
     // incrementUpvotes function
     $scope.incrementUpvotes = function(post){
       posts.upvote(post);
