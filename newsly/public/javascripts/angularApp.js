@@ -28,6 +28,7 @@ app.factory('posts', ['$http', function($http){
   };
   // returns a single post from the server
   o.get = function(id) {
+    // instead of using success(), using a promise 
     return $http.get('/posts/' + id).then(function(res){
       return res.data;
     });
