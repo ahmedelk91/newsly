@@ -26,6 +26,12 @@ app.factory('posts', ['$http', function($http){
       post.upvotes += 1;
     });
   };
+  // returns a single post from the server
+  o.get = function(id) {
+    return $http.get('/posts/' + id).then(function(res){
+      return res.data;
+    });
+  };
   return o;
 }]);
 // Main conterller referenced in the <body> tag.
