@@ -28,10 +28,14 @@ app.factory('posts', ['$http', function($http){
   };
   // returns a single post from the server
   o.get = function(id) {
-    // instead of using success(), using a promise 
+    // instead of using success(), using a promise
     return $http.get('/posts/' + id).then(function(res){
       return res.data;
     });
+  };
+  // method for adding comments to posts
+  o.addComment = function(id, comment) {
+    return $http.post('/posts/' + id + '/comments', comment);
   };
   return o;
 }]);
@@ -63,11 +67,11 @@ app.controller('MainCtrl', [
 
   app.controller('PostsCtrl', [
     '$scope',
-    '$stateParams',
     'posts',
-    function($scope, $stateParams, posts){
+    'post',
+    function($scope, posts, post){
       // Grabs the appropriate post from the posts factory using the id from $stateParams.
-      $scope.post = posts.posts[$stateParams.id];
+      $scope.post = post;
       $scope.addComment = function(){
         if($scope.body === '') {return; }
         $scope.post.comments.push({
@@ -105,7 +109,13 @@ app.controller('MainCtrl', [
           // {id} is a route parameter, made available in the controller
           url: '/posts/{id}',
           templateUrl: '/posts.html',
-          controller: 'PostsCtrl'
+          controller: 'PostsCtrl',
+          // property of ui-router that ensures posts AND comments are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
+          resolve: {
+            post: ['$stateParams', 'posts', function($stateParams, posts){
+              return posts.get($stateParams.id);
+            }]
+          }
         });
 
         // Redirects unspecified routes
