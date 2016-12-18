@@ -12,7 +12,6 @@ app.factory('posts', ['$http', function($http){
     return $http.get('/posts').success(function(data){
       // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated
       angular.copy(data, o.posts);
-
     });
   };
   // method for creating new posts
@@ -48,16 +47,7 @@ app.controller('MainCtrl', [
       });
       $scope.title = '';
       $scope.link = '';
-      // Pushes the new post to the $scope.post array
-      $scope.posts.push({
-        title: $scope.title,
-        link: $scope.link,
-        upvotes: 0,
-        comments: []
-      });
-      $scope.title = '';
-      $scope.link = '';
-    } //bracket placed here instead of before $scope.posts.push
+    };
     // incrementUpvotes function
     $scope.incrementUpvotes = function(post){
       posts.upvote(post);
@@ -96,7 +86,7 @@ app.controller('MainCtrl', [
           url:'/home',
           templateUrl: '/home.html',
           controller: 'MainCtrl',
-          // property of ui-router that ensures posts are loaded
+          // property of ui-router that ensures posts are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
           resolve: {
             postPromise: ['posts', function(posts){
               return posts.getAll();
