@@ -1,6 +1,41 @@
 // Defines the app as an angular module. Includes ui-router as a dependency.
 var app = angular.module('newsly', ['ui.router']);
 
+// Configures home state using $stateProvider
+app.config([
+  '$stateProvider',
+  '$urlRouterProvider',
+  function($stateProvider, $urlRouterProvider) {
+
+    $stateProvider
+    .state('home', {
+      url:'/home',
+      templateUrl: '/home.html',
+      controller: 'MainCtrl',
+      // property of ui-router that ensures posts are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
+      resolve: {
+        postPromise: ['posts', function(posts){
+          return posts.getAll();
+        }]
+      }
+    })
+    // Posts state: individual posts and their comments
+    .state('posts', {
+      // {id} is a route parameter, made available in the controller
+      url: '/posts/{id}',
+      templateUrl: '/posts.html',
+      controller: 'PostsCtrl',
+      // property of ui-router that ensures posts AND comments are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
+      resolve: {
+        post: ['$stateParams', 'posts', function($stateParams, posts){
+          return posts.get($stateParams.id)
+        }]
+      }
+    });
+  // Redirects unspecified routes
+  $urlRouterProvider.otherwise('home');
+}]);
+
 //factory for posts
 app.factory('posts', ['$http', function($http){
   var o = {
@@ -10,7 +45,7 @@ app.factory('posts', ['$http', function($http){
   o.getAll = function() {
     // queries the '/posts' route
     return $http.get('/posts').success(function(data){
-      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated
+      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
       angular.copy(data, o.posts);
     });
   };
@@ -37,8 +72,16 @@ app.factory('posts', ['$http', function($http){
   o.addComment = function(id, comment) {
     return $http.post('/posts/' + id + '/comments', comment);
   };
+  // method for upvoting comments
+  o.upvoteComment = function(post, comment) {
+    return $http.put('posts/' + post._id + '/comments/' + comment._id + '/upvote')
+    .success(function(data){
+      comment.upvotes += 1;
+    });
+  };
   return o;
 }]);
+
 // Main conterller referenced in the <body> tag.
 app.controller('MainCtrl', [
   '$scope',
@@ -47,6 +90,8 @@ app.controller('MainCtrl', [
   function($scope, posts){
     // Binds the posts array in the factory to the $scope.posts variable
     $scope.posts = posts.posts;
+    // Setting title to blank to prevent empty posts
+    $scope.title = '';
     // addPost function
     $scope.addPost = function(){
       // Stops a user from submitting a blank title
@@ -56,13 +101,14 @@ app.controller('MainCtrl', [
         title: $scope.title,
         link: $scope.link,
       });
+      // clears the values
       $scope.title = '';
       $scope.link = '';
     };
     // incrementUpvotes function
     $scope.incrementUpvotes = function(post){
       posts.upvote(post);
-    }
+    };
   }]);
 
   app.controller('PostsCtrl', [
@@ -72,6 +118,7 @@ app.controller('MainCtrl', [
     function($scope, posts, post){
       // Grabs the appropriate post from the posts factory using the id from $stateParams.
       $scope.post = post;
+
       $scope.addComment = function(){
         if($scope.body === '') {return; }
         posts.addComment(post._id, {
@@ -82,43 +129,9 @@ app.controller('MainCtrl', [
         });
         $scope.body = '';
       };
+      // enabels upvoting comments
       $scope.incrementUpvotes = function(comment){
-        comment.upvotes += 1;
+        posts.upvoteComment(post, comment);
+        console.log(comment);
       };
     }]);
-
-    // Configures home state using $stateProvider
-    app.config([
-      '$stateProvider',
-      '$urlRouterProvider',
-      function($stateProvider, $urlRouterProvider) {
-
-        $stateProvider
-        .state('home', {
-          url:'/home',
-          templateUrl: '/home.html',
-          controller: 'MainCtrl',
-          // property of ui-router that ensures posts are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
-          resolve: {
-            postPromise: ['posts', function(posts){
-              return posts.getAll();
-            }]
-          }
-        })
-        // Posts state: individual posts and their comments
-        .state('posts', {
-          // {id} is a route parameter, made available in the controller
-          url: '/posts/{id}',
-          templateUrl: '/posts.html',
-          controller: 'PostsCtrl',
-          // property of ui-router that ensures posts AND comments are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
-          resolve: {
-            post: ['$stateParams', 'posts', function($stateParams, posts){
-              return posts.get($stateParams.id);
-            }]
-          }
-        });
-
-        // Redirects unspecified routes
-        $urlRouterProvider.otherwise('home');
-      }]);

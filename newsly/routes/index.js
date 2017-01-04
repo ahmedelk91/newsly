@@ -34,7 +34,7 @@ router.post('/posts', function(req, res, next) {
 router.param('post', function(req, res, next, id) {
   var query = Post.findById(id);
   // Use's mongoose's query interface which provides a more flexible way of interacting with the database.
-  query.exec(function (err, post) {
+  query.exec(function(err, post) {
     if (err) { return next(err); }
     if (!post) { return next(new Error('can\'t find post')); }
 
@@ -43,12 +43,11 @@ router.param('post', function(req, res, next, id) {
   });
 });
 
+
 // Route for returning a single post
 router.get('/posts/:post', function(req, res, next) {
   // populate function automatically loads all comments associated with a post
   req.post.populate('comments', function(err, post){
-    if (err) { return next(err); }
-
     res.json(post);
   });
 });
@@ -79,17 +78,8 @@ router.post('/posts/:post/comments', function(req, res, next) {
   });
 });
 
-//route to upvote comments
-router.put('posts/:post/comments/:comment/upvote', function(req, res, next){
-  req.comment.upvote(function(err, comment){
-    if (err) {return next(err); }
-
-    res.json(post);
-  });
-});
-
 router.param('comment', function(req, res, next, id) {
-  var query = Post.findById(id);
+  var query = Comment.findById(id);
   // Use's mongoose's query interface which provides a more flexible way of interacting with the database.
   query.exec(function (err, comment) {
     if (err) { return next(err); }
@@ -99,5 +89,15 @@ router.param('comment', function(req, res, next, id) {
     return next();
   });
 });
+
+//route to upvote comments
+router.put('posts/:post/comments/:comment/upvote', function(req, res, next) {
+  req.comment.upvote(function(err, comment){
+    if (err) { return next(err); }
+
+    res.json(comment);
+  });
+});
+
 
 module.exports = router;
