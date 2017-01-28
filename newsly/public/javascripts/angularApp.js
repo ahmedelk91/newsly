@@ -27,111 +27,110 @@ app.config([
       controller: 'PostsCtrl',
       // property of ui-router that ensures posts AND comments are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
       resolve: {
-        post: ['$stateParams', 'posts', function($stateParams, posts){
+        post: ['$stateParams', 'posts', function($stateParams, posts) {
           return posts.get($stateParams.id)
         }]
       }
     });
-  // Redirects unspecified routes
-  $urlRouterProvider.otherwise('home');
-}]);
-
-//factory for posts
-app.factory('posts', ['$http', function($http){
-  var o = {
-    posts: []
-  };
-  // Retrieves post from backend
-  o.getAll = function() {
-    // queries the '/posts' route
-    return $http.get('/posts').success(function(data){
-      // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
-      angular.copy(data, o.posts);
-    });
-  };
-  // method for creating new posts
-  o.create = function(post) {
-    // binds function that will be executed when the request returns
-    return $http.post('/posts', post).success(function(data){
-      o.posts.push(data);
-    });
-  };
-  o.upvote = function(post) {
-    return $http.put('/posts/' + post._id + '/upvote').success(function(data){
-      post.upvotes += 1;
-    });
-  };
-  // returns a single post from the server
-  o.get = function(id) {
-    // instead of using success(), using a promise
-    return $http.get('/posts/' + id).then(function(res){
-      return res.data;
-    });
-  };
-  // method for adding comments to posts
-  o.addComment = function(id, comment) {
-    return $http.post('/posts/' + id + '/comments', comment);
-  };
-  // method for upvoting comments
-  o.upvoteComment = function(post, comment) {
-    return $http.put('posts/' + post._id + '/comments/' + comment._id + '/upvote')
-    .success(function(data){
-      comment.upvotes += 1;
-    });
-  };
-  return o;
-}]);
-
-// Main conterller referenced in the <body> tag.
-app.controller('MainCtrl', [
-  '$scope',
-  // injects 'posts' service in the Main controller
-  'posts',
-  function($scope, posts){
-    // Binds the posts array in the factory to the $scope.posts variable
-    $scope.posts = posts.posts;
-    // Setting title to blank to prevent empty posts
-    $scope.title = '';
-    // addPost function
-    $scope.addPost = function(){
-      // Stops a user from submitting a blank title
-      if(!$scope.title || $scope.title === '') { return; }
-      // saves posts to the server, persistent data
-      posts.create({
-        title: $scope.title,
-        link: $scope.link,
-      });
-      // clears the values
-      $scope.title = '';
-      $scope.link = '';
-    };
-    // incrementUpvotes function
-    $scope.incrementUpvotes = function(post){
-      posts.upvote(post);
-    };
+    // Redirects unspecified routes
+    $urlRouterProvider.otherwise('home');
   }]);
 
-  app.controller('PostsCtrl', [
-    '$scope',
-    'posts',
-    'post',
-    function($scope, posts, post){
-      // Grabs the appropriate post from the posts factory using the id from $stateParams.
-      $scope.post = post;
+  //factory for posts
+  app.factory('posts', ['$http', function($http){
+    var o = {
+      posts: []
+    };
+    // Retrieves post from backend
+    o.getAll = function() {
+      // queries the '/posts' route
+      return $http.get('/posts').success(function(data){
+        // Creates a deep copy of the returned data (ensures $scope.posts in MainCtrl is updated)
+        angular.copy(data, o.posts);
+      });
+    };
+    // method for creating new posts
+    o.create = function(post) {
+      // binds function that will be executed when the request returns
+      return $http.post('/posts', post).success(function(data){
+        o.posts.push(data);
+      });
+    };
+    o.upvote = function(post) {
+      return $http.put('/posts/' + post._id + '/upvote').success(function(data){
+        post.upvotes += 1;
+      });
+    };
+    // returns a single post from the server
+    o.get = function(id) {
+      // instead of using success(), using a promise
+      return $http.get('/posts/' + id).then(function(res){
+        return res.data;
+      });
+    };
+    // method for adding comments to posts
+    o.addComment = function(id, comment) {
+      return $http.post('/posts/' + id + '/comments', comment);
+    };
+    // method for upvoting comments
+    o.upvoteComment = function(post, comment) {
+      return $http.put('/posts/' + post._id + '/comments/'+ comment._id + '/upvote')
+      .success(function(data){
+        comment.upvotes += 1;
+      });
+    };
+    return o;
+  }]);
 
-      $scope.addComment = function(){
-        if($scope.body === '') {return; }
-        posts.addComment(post._id, {
-          body: $scope.body,
-          author: 'user',
-        }).success(function(comment) {
-          $scope.post.comments.push(comment);
+  // Main conterller referenced in the <body> tag.
+  app.controller('MainCtrl', [
+    '$scope',
+    // injects 'posts' service in the Main controller
+    'posts',
+    function($scope, posts){
+      // Binds the posts array in the factory to the $scope.posts variable
+      $scope.posts = posts.posts;
+      // Setting title to blank to prevent empty posts
+      $scope.title = '';
+      // addPost function
+      $scope.addPost = function(){
+        // Stops a user from submitting a blank title
+        if(!$scope.title || $scope.title === '') { return; }
+        // saves posts to the server, persistent data
+        posts.create({
+          title: $scope.title,
+          link: $scope.link,
         });
-        $scope.body = '';
+        // clears the values
+        $scope.title = '';
+        $scope.link = '';
       };
-      // enabels upvoting comments
-      $scope.incrementUpvotes = function(comment){
-        posts.upvoteComment(post, comment);
-        console.log(comment);
+      // incrementUpvotes function
+      $scope.incrementUpvotes = function(post){
+        posts.upvote(post);
       };
     }]);
+
+    app.controller('PostsCtrl', [
+      '$scope',
+      'posts',
+      'post',
+      function($scope, posts, post){
+        // Grabs the appropriate post from the posts factory using the id from $stateParams.
+        $scope.post = post;
+
+        $scope.addComment = function(){
+          if($scope.body === '') { return; }
+          posts.addComment(post._id, {
+            body: $scope.body,
+            author: 'user',
+          }).success(function(comment) {
+            $scope.post.comments.push(comment);
+          });
+          $scope.body = '';
+        };
+        // enabels upvoting comments
+        $scope.incrementUpvotes = function(comment){
+          posts.upvoteComment(post, comment);
+        };
+      }]);
