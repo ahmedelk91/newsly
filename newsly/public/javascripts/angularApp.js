@@ -82,6 +82,49 @@ app.config([
     return o;
   }]);
 
+  app.factory('auth', ['$http', '$window', function($http, $window){
+    var auth = {};
+
+    return auth;
+
+    auth.saveToken = function (token){
+      $window.localStorage['newsly-token'] = token;
+    };
+    auth.getToken = function (){
+      return $window.localStorage['newsly-token']
+    };
+    auth.isLoggedIn = function(){
+      var token = auth.getToken();
+
+      if(token){
+        var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+        return payload.exp > Date.now() / 1000;
+      } else {
+        return false;
+      }
+    };
+    auth.currentUser = funtion(){
+      if(auth.isLoggedIn()){
+        var token = auth.getToken();
+        var payload = JSON.parse($window.atob(token.split('.')[1]))
+      }
+    };
+    auth.register = function(user){
+      return $http.post('/register', user).success(function(data){
+        auth.saveToken(data.token);
+      });
+    };
+    auth.logIn = function(user){
+      return $http.post('/login', user).success(function(data){
+        auth.saveToken(data.token);
+      });
+    };
+    auth.logOut = function(){
+      $window.localStorage.removeItem('newsly-token');
+    };
+  }])
+
   // Main conterller referenced in the <body> tag.
   app.controller('MainCtrl', [
     '$scope',
