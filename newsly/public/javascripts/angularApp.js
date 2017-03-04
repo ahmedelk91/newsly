@@ -91,8 +91,8 @@ app.config([
       $window.localStorage['newsly-token'] = token;
     };
     auth.getToken = function (){
-      return $window.localStorage['newsly-token']
-    };
+      return $window.localStorage['newsly-token'];
+    }
     auth.isLoggedIn = function(){
       var token = auth.getToken();
 
@@ -104,10 +104,12 @@ app.config([
         return false;
       }
     };
-    auth.currentUser = funtion(){
+    auth.currentUser = function(){
       if(auth.isLoggedIn()){
         var token = auth.getToken();
-        var payload = JSON.parse($window.atob(token.split('.')[1]))
+        var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+        return payload.username;
       }
     };
     auth.register = function(user){
@@ -177,3 +179,25 @@ app.config([
           posts.upvoteComment(post, comment);
         };
       }]);
+
+      app.controller('AuthCtrl', [
+        '$scope',
+        '$state',
+        'auth',
+        function($scope, $state, auth){
+          $scope.user = {};
+
+          $scope.register = function(){
+            auth.register($scope.user).error(function(error){
+              $scope.error = error;
+            }).then(function(){
+              $state.go('home');
+            });
+          };
+
+          $scope.logIn = function(){
+            auth.logIn($scope.user).error(function(error){
+              $scope.error = error;
+            })
+          }
+        }])

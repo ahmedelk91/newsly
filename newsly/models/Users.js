@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 // used to has passwords
-var crypto = require('cryto');
+var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 
 var UserSchema = new mongoose.Schema({
@@ -18,14 +18,14 @@ UserSchema.methods.setPassword = function(password){
 
 // method that accepts the password and compares it to the hash stored, returning a boolean
 UserSchema.methods.validPassword = function(password){
-var hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex')
+  var hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
 
-return this.hash === hash;
+  return this.hash === hash;
 };
 
 UserSchema.methods.generateJWT = function() {
 
-// sets expiration to 60 days
+  // sets expiration to 60 days
   var today = new Date();
   var exp = new Date(today);
   exp.setDate(today.getDate() + 60);
@@ -34,7 +34,7 @@ UserSchema.methods.generateJWT = function() {
     _id: this._id,
     username: this.username,
     exp: parseInt(exp.getTime() / 1000),
-  }, 'SECRET')
+  }, 'SECRET');
 };
 
 mongoose.model('User', UserSchema);
