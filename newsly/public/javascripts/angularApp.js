@@ -28,9 +28,29 @@ app.config([
       // property of ui-router that ensures posts AND comments are loaded; anytime the home state is entered, it automatically queries all posts from the backend before the state finished loading
       resolve: {
         post: ['$stateParams', 'posts', function($stateParams, posts) {
-          return posts.get($stateParams.id)
+          return posts.get($stateParams.id);
         }]
       }
+    })
+    .state('login', {
+      url: '/login',
+      templateUrl: '/login.html',
+      controller: 'AuthCtrl',
+      onEnter: ['$state', 'auth', function($state, auth){
+        if(auth.isLoggedIn()){
+          $state.go('home');
+        }
+      }]
+    })
+    .state('register', {
+      url: '/register',
+      templateUrl: '/register.html',
+      controller:'AuthCtrl',
+      onEnter: [$state, 'auth', function($state, auth){
+        if(auth.isLoggedIn()){
+          $state.go('home');
+        }
+      }]
     });
     // Redirects unspecified routes
     $urlRouterProvider.otherwise('home');
@@ -198,6 +218,8 @@ app.config([
           $scope.logIn = function(){
             auth.logIn($scope.user).error(function(error){
               $scope.error = error;
-            })
-          }
+            }).then(function(){
+              $state.go('home');
+            });
+          };
         }])
