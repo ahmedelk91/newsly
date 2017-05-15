@@ -16,8 +16,26 @@
   <style> .glyphicon-thumbs-up { cursor:pointer } </style>
 </head>
 
+
+
+<!-- ********************************************************************************************************************* -->
+<!--  Start of Body  -->
+<!-- ********************************************************************************************************************* -->
+
+
+
 <!-- Main controller. Containes addPost and incrementUpvotes functions -->
+
 <body background="https://subtlepatterns.com/patterns/weather.png" ng-app="newsly">
+
+  <nav class="navbar navbar-default pull-right" ng-controller="NavCtrl">
+    <ul class="nav navbar-nav">
+      <li ng-show="isLoggedIn()"><a>{{ currentUser() }}</a></li>
+      <li ng-show="isLoggedIn()"><a href="" ng-click="logOut()">Log Out</a></li>
+      <li ng-hide="isLoggedIn()"><a href="/#/login">Log In</a></li>
+      <li ng-hide="isLoggedIn()"><a href="/#/register">Register</a></li>
+    </ul>
+  </nav>
 
   <div class="row">
     <div class="col-md-6 col-md-offset-3">
@@ -31,11 +49,20 @@
       <h1>Newsly</h1>
     </div>
 
+
+
+    <!-- ******************************************************************************************************************* -->
+    <!-- Show Page Displaying Posts -->
+    <!-- ******************************************************************************************************************* -->
+
+
+
     <!-- Shows all posts ordered by upvotes. -->
     <div ng-repeat="post in posts | orderBy: '-upvotes'">
       <!-- When a user clicks thumbs-up the post's upvote will increment by 1 -->
       <span class="glyphicon glyphicon-thumbs-up" ng-click="incrementUpvotes(post)"></span>
       {{post.upvotes}}
+      <span class="glyphicon glyphicon-thumbs-down" ng-click="downvote(post)"></span>
       <span style="font-size:20px; margin-left:10px;">
         <a ng-show="post.link" href="{{post.link}}">
           {{post.title}}
@@ -44,14 +71,25 @@
         <span ng-hide="post.link">
           {{post.title}}
         </span>
+        <span ng-show="post.author">
+          posted by <a>{{post.author}}</a> |
+        </span>
         <span>
           <a href="#/posts/{{post._id}}">Comments</a>
+          ({{post.comments.length}})
         </span>
       </span>
     </div>
 
+
+
+    <!-- ******************************************************************************************************************* -->
     <!-- Form to add Posts -->
-    <form ng-submit="addPost()" style="margin-top:30px;">
+    <!-- ******************************************************************************************************************* -->
+
+
+
+    <form ng-submit="addPost()" ng-show="isLoggedIn()" style="margin-top:30px;">
       <h3>Add a new post</h3>
 
       <div class="form-group">
@@ -63,9 +101,18 @@
       <!-- Users can either press "enter" or click the "Post" button -->
       <button type="submit" class="btn btn-primary">Post</button>
     </form>
+    <div ng-hide="isLoggedIn()"></div>
+    <h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register</a> before you can add a post.</h3>
   </script>
 
+
+
+  <!-- ******************************************************************************************************************* -->
   <!-- Posts template -->
+  <!-- ******************************************************************************************************************* -->
+
+
+
   <script type="text/ng-template" id="/posts.html">
     <div class="page-header">
       <h3>
@@ -78,36 +125,66 @@
       </h3>
     </div>
 
+
+
+    <!-- ******************************************************************************************************************* -->
+    <!-- Comments Displayed in Post Show -->
+    <!-- ******************************************************************************************************************* -->
+
+
+
     <div ng-repeat="comment in post.comments | orderBy: '-upvotes'">
       <span class="glyphicon glyphicon-thumbs-up" ng-click="incrementUpvotes(comment)"></span>
-      {{comment.upvotes}} - by {{comment.author}}
+      {{comment.upvotes}}
+      <span class="glyphicon-thumbs-down"
+      ng-click="downvote(comment)"></span>
+      - by {{comment.author}}
       <span style="font-size:20px; margin-left:10px;">
         {{comment.body}}
       </span>
     </div>
 
-    <form ng-submit="addComment()" style="margin-top:30px;">
+
+
+    <!-- ******************************************************************************************************************* -->
+    <!-- Comments Form -->
+    <!-- ******************************************************************************************************************* -->
+
+
+
+    <form ng-submit="addComment()" ng-show="isLoggedIn()" style="margin-top:30px;">
       <h3>Add a new comment</h3>
 
-      <div class="form group">
+      <div class="form-group">
         <input type="text" class="form-control" placeholder="Comment" ng-model="body">
       </div>
+
       <button type="submit" class="btn btn-primary">Post</button>
     </form>
+    <div ng-hide="isLoggedIn()">
+      <h3>You need to <a href="/#/login">log in</a> or <a href="/#register">register</a> before you can comment.</h3>
+    </div>
   </script>
-</body>
-</html>
 
-<script type="text/ng-template" id="/register.html">
-  <div class="page-header">
-    <h1>Newsly</h1>
-  </div>
 
-  <div ng-show="error" class="alert alert-danger row">
-    <span>{{ error.message }}</span>
-  </div>
 
-  <form ng-submit="register()" style="margin-top: 30px;">
+  <!-- ******************************************************************************************************************* -->
+  <!-- Registration template & form -->
+  <!-- ******************************************************************************************************************* -->
+
+
+
+  <script type="text/ng-template" id="/register.html">
+    <div class="page-header">
+      <h1>Newsly</h1>
+    </div>
+
+    <div ng-show="error" class="alert alert-danger row">
+      <span>{{ error.message }}</span>
+    </div>
+
+    <form ng-submit="register()"
+    style="margin-top: 30px;">
     <h3>Reigster</h3>
 
     <div class="form-group">
@@ -127,6 +204,14 @@
   </form>
 </script>
 
+
+
+<!-- ******************************************************************************************************************* -->
+<!-- Login template & form -->
+<!-- ******************************************************************************************************************* -->
+
+
+
 <script type="text/ng-template" id="/login.html">
   <div class="page-header">
     <h1>Newsly</h1>
@@ -136,15 +221,27 @@
     <span>{{ error.message }}</span>
   </div>
 
-  <form ng-submit="logIn()" style="margin: 30px;">
-    <h3>"Log In"</h3>
+  <form ng-submit="logIn()"
+  style="margin-top: 30px;">
+  <h3>"Log In"</h3>
 
-    <div class="form-group">
-      <input type="text"
-      class="form-control"
-      placeholder="Username"
-      ng-model="user.username"></input>
-    </div>
-    <button type="submit" class="btn btn-primary">Log In</button>
-  </form>
+  <div class="form-group">
+    <input type="text"
+    class="form-control"
+    placeholder="Username"
+    ng-model="user.username"></input>
+  </div>
+
+  <div class="form-group">
+    <input type="password"
+    class="form-control"
+    placeholder="Password"
+    ng-model="user.password"></input>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Log In</button>
+</form>
 </script>
+
+</body>
+</html>

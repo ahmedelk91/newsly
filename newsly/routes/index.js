@@ -2,8 +2,12 @@ var mongoose = require('mongoose');
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
-var User = mongoose.model('User');
 var jwt = require('express-jwt');
+
+var Post = mongoose.model('Post');
+var Comment = mongoose.model('Comment');
+var User = mongoose.model('User');
+
 var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 
 /* GET home page. */
@@ -11,8 +15,6 @@ router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-var Post = mongoose.model('Post');
-var Comment = mongoose.model('Comment');
 
 // GET Request
 router.get('/posts', function(req, res, next) {
@@ -66,6 +68,15 @@ router.put('/posts/:post/upvote', auth, function(req, res, next) {
   });
 });
 
+// route for adding downvotes
+router.put('/posts/:post/downvote', auth, function(req, res, next) {
+  req.post.downvote(function(err, post){
+    if (err) { return next(err); }
+
+    res.json(post);
+  });
+});
+
 //route for comments, attached to a certain post via post ID
 router.post('/posts/:post/comments', auth, function(req, res, next) {
   var comment = new Comment(req.body);
@@ -99,6 +110,14 @@ router.param('comment', function(req, res, next, id) {
 //route to upvote comments
 router.put('/posts/:post/comments/:comment/upvote', auth, function(req, res, next) {
   req.comment.upvote(function(err, comment){
+    if (err) { return next(err); }
+
+    res.json(comment);
+  });
+});
+
+router.put('posts/:post/comments/:comment/downvote', auth, function(req, res, next) {
+  req.comment.downvote(function(err, comment){
     if (err) { return next(err); }
 
     res.json(comment);

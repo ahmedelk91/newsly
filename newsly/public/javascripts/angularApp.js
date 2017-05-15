@@ -46,7 +46,7 @@ app.config([
       url: '/register',
       templateUrl: '/register.html',
       controller:'AuthCtrl',
-      onEnter: [$state, 'auth', function($state, auth){
+      onEnter: ['$state', 'auth', function($state, auth){
         if(auth.isLoggedIn()){
           $state.go('home');
         }
@@ -57,7 +57,7 @@ app.config([
   }]);
 
   //factory for posts
-  app.factory('posts', ['$http', function($http){
+  app.factory('posts', ['$http', 'auth', function($http, auth){
     var o = {
       posts: []
     };
@@ -72,13 +72,24 @@ app.config([
     // method for creating new posts
     o.create = function(post) {
       // binds function that will be executed when the request returns
-      return $http.post('/posts', post).success(function(data){
+      return $http.post('/posts', post, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      }).success(function(data){
         o.posts.push(data);
       });
     };
     o.upvote = function(post) {
-      return $http.put('/posts/' + post._id + '/upvote').success(function(data){
+      return $http.put('/posts/' + post._id + '/upvote', null, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      }).success(function(data){
         post.upvotes += 1;
+      });
+    };
+    o.downvote = function(post) {
+      return $http.put('/posts/' + post._id + '/downvote', null, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      }).success(function(data){
+        post.upvotes -= 1;
       });
     };
     // returns a single post from the server
@@ -90,13 +101,24 @@ app.config([
     };
     // method for adding comments to posts
     o.addComment = function(id, comment) {
-      return $http.post('/posts/' + id + '/comments', comment);
+      return $http.post('/posts/' + id + '/comments', comment, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      });
     };
     // method for upvoting comments
     o.upvoteComment = function(post, comment) {
-      return $http.put('/posts/' + post._id + '/comments/'+ comment._id + '/upvote')
-      .success(function(data){
+      return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote', null, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      }).success(function(data){
         comment.upvotes += 1;
+      });
+    };
+    // method for downvoting comments
+    o.downvoteComment = function(post, comment) {
+      return $http.put('/posts/' + post._id + '/comments' + comment._id + '/downvote', null, {
+        headers: {Authorization: 'Bearer ' +auth.getToken()}
+      }).success(function(data){
+        comment.upvotes -= 1;
       });
     };
     return o;
@@ -105,7 +127,7 @@ app.config([
   app.factory('auth', ['$http', '$window', function($http, $window){
     var auth = {};
 
-    return auth;
+    // return auth;
 
     auth.saveToken = function (token){
       $window.localStorage['newsly-token'] = token;
@@ -145,6 +167,8 @@ app.config([
     auth.logOut = function(){
       $window.localStorage.removeItem('newsly-token');
     };
+
+    return auth;
   }])
 
   // Main conterller referenced in the <body> tag.
@@ -152,9 +176,11 @@ app.config([
     '$scope',
     // injects 'posts' service in the Main controller
     'posts',
-    function($scope, posts){
+    'auth',
+    function($scope, posts, auth){
       // Binds the posts array in the factory to the $scope.posts variable
       $scope.posts = posts.posts;
+      $scope.isLoggedIn = auth.isLoggedIn;
       // Setting title to blank to prevent empty posts
       $scope.title = '';
       // addPost function
@@ -174,16 +200,20 @@ app.config([
       $scope.incrementUpvotes = function(post){
         posts.upvote(post);
       };
+      $scope.downvote = function(post) {
+        posts.downvote(post);
+      };
     }]);
 
     app.controller('PostsCtrl', [
       '$scope',
       'posts',
       'post',
-      function($scope, posts, post){
+      'auth',
+      function($scope, posts, post, auth){
         // Grabs the appropriate post from the posts factory using the id from $stateParams.
         $scope.post = post;
-
+        $scope.isLoggedIn = auth.isLoggedIn;
         $scope.addComment = function(){
           if($scope.body === '') { return; }
           posts.addComment(post._id, {
@@ -197,6 +227,9 @@ app.config([
         // enabels upvoting comments
         $scope.incrementUpvotes = function(comment){
           posts.upvoteComment(post, comment);
+        };
+        $scope.downvote = function(comment) {
+          posts.downvoteComment(post, comment);
         };
       }]);
 
@@ -222,4 +255,13 @@ app.config([
               $state.go('home');
             });
           };
-        }])
+        }]);
+
+        app.controller('NavCtrl', [
+          '$scope',
+          'auth',
+          function($scope , auth){
+            $scope.isLoggedIn = auth.isLoggedIn;
+            $scope.currentUser = auth.currentUser;
+            $scope.logOut = auth.logOut;
+          }]);

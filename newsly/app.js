@@ -4,9 +4,8 @@ require('./models/Posts');
 require('./models/Comments');
 require('./models/Users');
 require('./config/passport');
+mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/news');
-
-
 
 var express = require('express');
 var path = require('path');
