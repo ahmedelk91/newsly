@@ -101,9 +101,11 @@
       <!-- Users can either press "enter" or click the "Post" button -->
       <button type="submit" class="btn btn-primary">Post</button>
     </form>
-    <div ng-hide="isLoggedIn()"></div>
+    <div ng-hide="isLoggedIn()">
     <h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register</a> before you can add a post.</h3>
+    </div>
   </script>
+
 
 
 
@@ -134,16 +136,20 @@
 
 
     <div ng-repeat="comment in post.comments | orderBy: '-upvotes'">
-      <span class="glyphicon glyphicon-thumbs-up" ng-click="incrementUpvotes(comment)"></span>
+      <span class="glyphicon glyphicon-thumbs-up"
+      ng-click="incrementUpvotes(comment)"></span>
+
       {{comment.upvotes}}
+
       <span class="glyphicon glyphicon-thumbs-down"
       ng-click="downvote(comment)"></span>
+
       - by {{comment.author}}
+
       <span style="font-size:20px; margin-left:10px;">
         {{comment.body}}
       </span>
     </div>
-
 
 
     <!-- ******************************************************************************************************************* -->
@@ -160,6 +166,9 @@
       </div>
 
       <button type="submit" class="btn btn-primary">Post</button>
+      <a href="/#/" class="btn btn-primary">Back</a>
+      <span ng-click="remove(post)" class="btn btn-primary">Delete</span>
+
     </form>
     <div ng-hide="isLoggedIn()">
       <h3>You need to <a href="/#/login">log in</a> or <a href="/#register">register</a> before you can comment.</h3>

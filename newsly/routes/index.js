@@ -116,10 +116,9 @@ router.put('/posts/:post/comments/:comment/upvote', auth, function(req, res, nex
   });
 });
 
-router.put('posts/:post/comments/:comment/downvote', auth, function(req, res, next) {
+router.put('/posts/:post/comments/:comment/downvote', auth, function(req, res, next) {
   req.comment.downvote(function(err, comment){
     if (err) { return next(err); }
-
     res.json(comment);
   });
 });
@@ -157,5 +156,20 @@ router.post('/login', function(req, res, next){
     }
   })(req, res, next);
 });
+
+// routuer.delete('/posts/:post', function(req, res, next) {
+//   Post.remove({
+//     _id : req.params.post
+//   }, function(err, post) {
+//     if (err)
+//     res.send(err);
+//
+//     Post.find(function(err, post) {
+//       if (err)
+//       res.send(err)
+//       res.json(post);
+//     });
+//   });
+// });
 
 module.exports = router;

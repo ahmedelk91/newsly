@@ -115,153 +115,167 @@ app.config([
     };
     // method for downvoting comments
     o.downvoteComment = function(post, comment) {
-      return $http.put('/posts/' + post._id + '/comments' + comment._id + '/downvote', null, {
+      return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/downvote', null, {
         headers: {Authorization: 'Bearer ' +auth.getToken()}
       }).success(function(data){
         comment.upvotes -= 1;
       });
     };
-    return o;
+    o.remove = function(post) {
+      $http({ url: '/posts/' + post._id,
+      method: 'DELETE'
+    }).then(function(res) {
+      $http.get('/posts').success(function(data, status, headers, config){
+        console.log(data);
+      });
+    }, function(error) {
+      console.log(error);
+    });
+  };
+  return o;
+}]);
+
+app.factory('auth', ['$http', '$window', function($http, $window){
+  var auth = {};
+
+  // return auth;
+
+  auth.saveToken = function (token){
+    $window.localStorage['newsly-token'] = token;
+  };
+  auth.getToken = function (){
+    return $window.localStorage['newsly-token'];
+  }
+  auth.isLoggedIn = function(){
+    var token = auth.getToken();
+
+    if(token){
+      var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+      return payload.exp > Date.now() / 1000;
+    } else {
+      return false;
+    }
+  };
+  auth.currentUser = function(){
+    if(auth.isLoggedIn()){
+      var token = auth.getToken();
+      var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+      return payload.username;
+    }
+  };
+  auth.register = function(user){
+    return $http.post('/register', user).success(function(data){
+      auth.saveToken(data.token);
+    });
+  };
+  auth.logIn = function(user){
+    return $http.post('/login', user).success(function(data){
+      auth.saveToken(data.token);
+    });
+  };
+  auth.logOut = function(){
+    $window.localStorage.removeItem('newsly-token');
+  };
+
+  return auth;
+}])
+
+// Main conterller referenced in the <body> tag.
+app.controller('MainCtrl', [
+  '$scope',
+  // injects 'posts' service in the Main controller
+  'posts',
+  'auth',
+  function($scope, posts, auth){
+    // Binds the posts array in the factory to the $scope.posts variable
+    $scope.posts = posts.posts;
+    $scope.isLoggedIn = auth.isLoggedIn;
+    // Setting title to blank to prevent empty posts
+    $scope.title = '';
+    // addPost function
+    $scope.addPost = function(){
+      // Stops a user from submitting a blank title
+      if(!$scope.title || $scope.title === '') { return; }
+      // saves posts to the server, persistent data
+      posts.create({
+        title: $scope.title,
+        link: $scope.link,
+      });
+      // clears the values
+      $scope.title = '';
+      $scope.link = '';
+    };
+    // incrementUpvotes function
+    $scope.incrementUpvotes = function(post){
+      posts.upvote(post);
+    };
+    $scope.downvote = function(post) {
+      posts.downvote(post);
+    };
+    // $scope.remove = function(post) {
+    //   posts.remove(post);
+    // }
   }]);
 
-  app.factory('auth', ['$http', '$window', function($http, $window){
-    var auth = {};
-
-    // return auth;
-
-    auth.saveToken = function (token){
-      $window.localStorage['newsly-token'] = token;
-    };
-    auth.getToken = function (){
-      return $window.localStorage['newsly-token'];
-    }
-    auth.isLoggedIn = function(){
-      var token = auth.getToken();
-
-      if(token){
-        var payload = JSON.parse($window.atob(token.split('.')[1]));
-
-        return payload.exp > Date.now() / 1000;
-      } else {
-        return false;
-      }
-    };
-    auth.currentUser = function(){
-      if(auth.isLoggedIn()){
-        var token = auth.getToken();
-        var payload = JSON.parse($window.atob(token.split('.')[1]));
-
-        return payload.username;
-      }
-    };
-    auth.register = function(user){
-      return $http.post('/register', user).success(function(data){
-        auth.saveToken(data.token);
-      });
-    };
-    auth.logIn = function(user){
-      return $http.post('/login', user).success(function(data){
-        auth.saveToken(data.token);
-      });
-    };
-    auth.logOut = function(){
-      $window.localStorage.removeItem('newsly-token');
-    };
-
-    return auth;
-  }])
-
-  // Main conterller referenced in the <body> tag.
-  app.controller('MainCtrl', [
+  app.controller('PostsCtrl', [
     '$scope',
-    // injects 'posts' service in the Main controller
     'posts',
+    'post',
     'auth',
-    function($scope, posts, auth){
-      // Binds the posts array in the factory to the $scope.posts variable
-      $scope.posts = posts.posts;
+    function($scope, posts, post, auth){
+      // Grabs the appropriate post from the posts factory using the id from $stateParams.
+      $scope.post = post;
       $scope.isLoggedIn = auth.isLoggedIn;
-      // Setting title to blank to prevent empty posts
-      $scope.title = '';
-      // addPost function
-      $scope.addPost = function(){
-        // Stops a user from submitting a blank title
-        if(!$scope.title || $scope.title === '') { return; }
-        // saves posts to the server, persistent data
-        posts.create({
-          title: $scope.title,
-          link: $scope.link,
+      $scope.addComment = function(){
+        if($scope.body === '') { return; }
+        posts.addComment(post._id, {
+          body: $scope.body,
+          author: 'user',
+        }).success(function(comment) {
+          $scope.post.comments.push(comment);
         });
-        // clears the values
-        $scope.title = '';
-        $scope.link = '';
+        $scope.body = '';
       };
-      // incrementUpvotes function
-      $scope.incrementUpvotes = function(post){
-        posts.upvote(post);
+      // enabels upvoting comments
+      $scope.incrementUpvotes = function(comment){
+        posts.upvoteComment(post, comment);
       };
-      $scope.downvote = function(post) {
-        posts.downvote(post);
+      $scope.downvote = function(comment) {
+        posts.downvoteComment(post, comment);
       };
     }]);
 
-    app.controller('PostsCtrl', [
+    app.controller('AuthCtrl', [
       '$scope',
-      'posts',
-      'post',
+      '$state',
       'auth',
-      function($scope, posts, post, auth){
-        // Grabs the appropriate post from the posts factory using the id from $stateParams.
-        $scope.post = post;
-        $scope.isLoggedIn = auth.isLoggedIn;
-        $scope.addComment = function(){
-          if($scope.body === '') { return; }
-          posts.addComment(post._id, {
-            body: $scope.body,
-            author: 'user',
-          }).success(function(comment) {
-            $scope.post.comments.push(comment);
+      function($scope, $state, auth){
+        $scope.user = {};
+
+        $scope.register = function(){
+          auth.register($scope.user).error(function(error){
+            $scope.error = error;
+          }).then(function(){
+            $state.go('home');
           });
-          $scope.body = '';
         };
-        // enabels upvoting comments
-        $scope.incrementUpvotes = function(comment){
-          posts.upvoteComment(post, comment);
-        };
-        $scope.downvote = function(comment) {
-          posts.downvoteComment(post, comment);
+
+        $scope.logIn = function(){
+          auth.logIn($scope.user).error(function(error){
+            $scope.error = error;
+          }).then(function(){
+            $state.go('home');
+          });
         };
       }]);
 
-      app.controller('AuthCtrl', [
+      app.controller('NavCtrl', [
         '$scope',
-        '$state',
         'auth',
-        function($scope, $state, auth){
-          $scope.user = {};
-
-          $scope.register = function(){
-            auth.register($scope.user).error(function(error){
-              $scope.error = error;
-            }).then(function(){
-              $state.go('home');
-            });
-          };
-
-          $scope.logIn = function(){
-            auth.logIn($scope.user).error(function(error){
-              $scope.error = error;
-            }).then(function(){
-              $state.go('home');
-            });
-          };
+        function($scope , auth){
+          $scope.isLoggedIn = auth.isLoggedIn;
+          $scope.currentUser = auth.currentUser;
+          $scope.logOut = auth.logOut;
         }]);
-
-        app.controller('NavCtrl', [
-          '$scope',
-          'auth',
-          function($scope , auth){
-            $scope.isLoggedIn = auth.isLoggedIn;
-            $scope.currentUser = auth.currentUser;
-            $scope.logOut = auth.logOut;
-          }]);
